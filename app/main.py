@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from app import auth as auth_module
 from app.routes import router, validation_exception_handler
 
-app = FastAPI(title="Poisson Calculator", version="1.0.0")
+app = FastAPI(title="Event Horizon", version="1.0.0")
 
 # Register custom validation error handler
 app.add_exception_handler(RequestValidationError, validation_exception_handler)

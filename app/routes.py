@@ -12,13 +12,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.auth import verify_token
-from app.calculator import calculate_poisson
+from app.calculator import calculate_poisson, calculate_survival
 from app.models import (
     CalculationRequest,
     CalculationResponse,
     CalculationSteps,
     ErrorDetail,
     ErrorResponse,
+    SurvivalSteps,
     TimestampRange,
 )
 
@@ -76,8 +77,23 @@ async def calculate(
         annualized_frequency=result.annualized_frequency,
     )
 
+    # Run survival analysis
+    surv = calculate_survival(result.lambda_value, result.window_hours)
+    survival = SurvivalSteps(
+        lambda_per_hour=surv.lambda_per_hour,
+        half_life_hours=surv.half_life_hours,
+        half_life_days=surv.half_life_days,
+        mean_time_between_events_hours=surv.mean_time_between_events_hours,
+        mean_time_between_events_days=surv.mean_time_between_events_days,
+        survival_1d=surv.survival_1d,
+        survival_7d=surv.survival_7d,
+        survival_30d=surv.survival_30d,
+        survival_365d=surv.survival_365d,
+    )
+
     return CalculationResponse(
         mode=request.mode,
         time_range_utc=TimestampRange(start=start_utc, end=end_utc),
         steps=steps,
+        survival=survival,
     )

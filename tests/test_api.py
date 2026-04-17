@@ -287,7 +287,7 @@ class TestStaticFileServing:
 
         assert resp.status_code == 200
         assert "text/html" in resp.headers.get("content-type", "")
-        assert "Poisson Calculator" in resp.text
+        assert "Event Horizon" in resp.text
 
     @pytest.mark.asyncio
     async def test_invalid_token_url_returns_401(

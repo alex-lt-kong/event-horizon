@@ -65,12 +65,27 @@ class CalculationSteps(BaseModel):
     annualized_frequency: float
 
 
+class SurvivalSteps(BaseModel):
+    """Results of the survival / half-life analysis."""
+
+    lambda_per_hour: float
+    half_life_hours: float
+    half_life_days: float
+    mean_time_between_events_hours: float
+    mean_time_between_events_days: float
+    survival_1d: float
+    survival_7d: float
+    survival_30d: float
+    survival_365d: float
+
+
 class CalculationResponse(BaseModel):
     """Successful response from the /api/calculate endpoint."""
 
     mode: str
     time_range_utc: TimestampRange
     steps: CalculationSteps
+    survival: SurvivalSteps
 
 
 class ErrorDetail(BaseModel):

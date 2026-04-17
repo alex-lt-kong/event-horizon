@@ -1,9 +1,11 @@
-"""Pure calculation functions for the Poisson annualized frequency pipeline.
+"""Pure calculation functions for the Event Horizon probability toolkit.
 
 All functions are pure (no side effects, no HTTP concerns). The module
-implements the mathematical core: given an observed probability of at least
-one event in a time window, derive the annualized frequency using the
-Poisson distribution.
+implements:
+1. Poisson annualized frequency — given an observed probability of at least
+   one event in a time window, derive the annualized frequency.
+2. Survival analysis — half-life, mean time between events, and survival
+   probabilities at various horizons.
 """
 
 import math
@@ -18,6 +20,21 @@ class CalculationSteps:
     window_hours: float
     scaling_factor: float
     annualized_frequency: float
+
+
+@dataclass(frozen=True)
+class SurvivalSteps:
+    """Results of the survival / half-life analysis."""
+
+    lambda_per_hour: float
+    half_life_hours: float
+    half_life_days: float
+    mean_time_between_events_hours: float
+    mean_time_between_events_days: float
+    survival_1d: float   # P(no event in 1 day)
+    survival_7d: float   # P(no event in 7 days)
+    survival_30d: float  # P(no event in 30 days)
+    survival_365d: float # P(no event in 365 days)
 
 
 def compute_lambda(probability_pct: float) -> float:
@@ -99,4 +116,43 @@ def calculate_poisson(probability_pct: float, days: int, hours: int) -> Calculat
         window_hours=window_hours,
         scaling_factor=scaling_factor,
         annualized_frequency=annualized_freq,
+    )
+
+
+def compute_survival_probability(lambda_per_hour: float, hours: float) -> float:
+    """P(no event in the given time) = e^(−λ_per_hour × hours)."""
+    return math.exp(-lambda_per_hour * hours)
+
+
+def calculate_survival(lambda_value: float, window_hours: float) -> SurvivalSteps:
+    """Run the survival / half-life analysis.
+
+    Args:
+        lambda_value: Expected events in the observation window (from Poisson).
+        window_hours: Duration of the observation window in hours.
+
+    Returns:
+        A SurvivalSteps object with half-life, MTBE, and survival probabilities.
+    """
+    lambda_per_hour = lambda_value / window_hours
+
+    # Half-life: time at which P(at least 1 event) = 50%
+    # P(survive t) = e^(-λh * t) = 0.5  =>  t = ln(2) / λh
+    half_life_hours = math.log(2) / lambda_per_hour
+    half_life_days = half_life_hours / 24
+
+    # Mean time between events = 1 / λ_per_hour
+    mtbe_hours = 1.0 / lambda_per_hour
+    mtbe_days = mtbe_hours / 24
+
+    return SurvivalSteps(
+        lambda_per_hour=lambda_per_hour,
+        half_life_hours=round(half_life_hours, 2),
+        half_life_days=round(half_life_days, 2),
+        mean_time_between_events_hours=round(mtbe_hours, 2),
+        mean_time_between_events_days=round(mtbe_days, 2),
+        survival_1d=round(compute_survival_probability(lambda_per_hour, 24) * 100, 2),
+        survival_7d=round(compute_survival_probability(lambda_per_hour, 168) * 100, 2),
+        survival_30d=round(compute_survival_probability(lambda_per_hour, 720) * 100, 2),
+        survival_365d=round(compute_survival_probability(lambda_per_hour, 8766) * 100, 2),
     )

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poisson Calculator</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+    <title>Event Horizon</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔮</text></svg>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -91,7 +91,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Poisson Calculator</h1>
+        <h1>Event Horizon</h1>
         <div id="banner" class="banner" role="alert" aria-live="polite"></div>
 
         <!-- Time Range -->
@@ -279,16 +279,27 @@
         function displayResults(data, win) {
             $tbody.innerHTML = "";
             var steps = data.steps;
+            var surv = data.survival;
 
             var rows = [
                 { section: "Duration" },
                 ["Days", win.days],
                 ["Hours", win.hours],
                 ["Total Hours", steps.window_hours],
-                { section: "Poisson Calculation" },
+                { section: "Poisson Frequency Analysis" },
                 ["Lambda (\u03bb)", steps.lambda_value],
                 ["Scaling Factor (8766 / window_hours)", steps.scaling_factor],
-                ["Annualized Frequency", steps.annualized_frequency]
+                ["Annualized Frequency", steps.annualized_frequency],
+                { section: "Survival Analysis (Half-Life Heuristic)" },
+                ["Event Rate (\u03bb/hour)", surv.lambda_per_hour],
+                ["Half-Life (hours)", surv.half_life_hours],
+                ["Half-Life (days)", surv.half_life_days],
+                ["Mean Time Between Events (hours)", surv.mean_time_between_events_hours],
+                ["Mean Time Between Events (days)", surv.mean_time_between_events_days],
+                ["P(no event in 1 day)", surv.survival_1d + "%"],
+                ["P(no event in 7 days)", surv.survival_7d + "%"],
+                ["P(no event in 30 days)", surv.survival_30d + "%"],
+                ["P(no event in 1 year)", surv.survival_365d + "%"]
             ];
 
             rows.forEach(function(row) {
@@ -299,7 +310,7 @@
                     td.colSpan = 2; td.textContent = row.section;
                     tr.appendChild(td);
                 } else {
-                    var isHighlight = row[0] === "Annualized Frequency";
+                    var isHighlight = row[0] === "Annualized Frequency" || row[0] === "Half-Life (days)";
                     if (isHighlight) tr.className = "highlight";
                     var td1 = document.createElement("td"); td1.textContent = row[0];
                     var td2 = document.createElement("td");
