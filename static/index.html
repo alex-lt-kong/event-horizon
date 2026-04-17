@@ -4,9 +4,602 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Poisson Calculator</title>
+    <style>
+        /* ── Reset & Base ─────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                         Helvetica, Arial, sans-serif, "Apple Color Emoji",
+                         "Segoe UI Emoji";
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: #f5f5f5;
+            padding: 1rem;
+        }
+
+        /* ── Layout ───────────────────────────────────────────── */
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h2 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.4rem;
+        }
+
+        /* ── Banner ───────────────────────────────────────────── */
+        .banner {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+        .banner.error   { background: #fdecea; color: #b71c1c; border: 1px solid #f5c6cb; }
+        .banner.success { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; }
+
+        /* ── Form Elements ────────────────────────────────────── */
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #444;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="datetime-local"],
+        select {
+            width: 100%;
+            padding: 0.5rem 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: #fff;
+            color: #1a1a1a;
+            transition: border-color 0.15s;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 1px;
+            border-color: #1976d2;
+        }
+
+        .field-group {
+            margin-bottom: 0.85rem;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .field-row .field-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .field-error {
+            color: #c62828;
+            font-size: 0.8rem;
+            min-height: 1.2em;
+            margin-top: 0.15rem;
+        }
+
+        /* ── Buttons ──────────────────────────────────────────── */
+        button {
+            font-family: inherit;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-primary {
+            background: #1976d2;
+            color: #fff;
+            width: 100%;
+            padding: 0.65rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .btn-primary:hover  { background: #1565c0; }
+        .btn-primary:focus-visible {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        .btn-small {
+            background: #e0e0e0;
+            color: #333;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .btn-small:hover { background: #d0d0d0; }
+        .btn-small:focus-visible {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        /* ── Results Table ────────────────────────────────────── */
+        #results-section {
+            display: none;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            text-align: left;
+            padding: 0.5rem 0.6rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .results-table th {
+            font-weight: 600;
+            color: #555;
+            width: 50%;
+        }
+
+        .results-table td {
+            font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas,
+                         monospace;
+        }
+
+        .results-table tr.highlight td {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1565c0;
+        }
+
+        /* ── Responsive ───────────────────────────────────────── */
+        @media (max-width: 480px) {
+            body { padding: 0.5rem; }
+            .card { padding: 1rem; }
+            .field-row { flex-direction: column; gap: 0; }
+            .field-row .field-group { margin-bottom: 0.85rem; }
+        }
+    </style>
 </head>
 <body>
-    <h1>Poisson Calculator</h1>
-    <p>Frontend placeholder — full implementation coming soon.</p>
+    <div class="container">
+        <h1>Poisson Calculator</h1>
+
+        <!-- Banner for general errors / success -->
+        <div id="banner" class="banner" role="alert" aria-live="polite"></div>
+
+        <!-- Auth Token -->
+        <div class="card">
+            <h2>Authentication</h2>
+            <div class="field-group">
+                <label for="auth-token">Auth Token</label>
+                <input type="text" id="auth-token" placeholder="Enter your UUID token"
+                       autocomplete="off" spellcheck="false"
+                       aria-describedby="auth-token-error">
+                <div id="auth-token-error" class="field-error" role="alert"></div>
+            </div>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="card">
+            <h2>Calculation Mode</h2>
+            <div class="field-group">
+                <label for="mode-select">Mode</label>
+                <select id="mode-select" aria-describedby="mode-desc">
+                    <option value="poisson" selected>Poisson</option>
+                </select>
+                <div id="mode-desc" class="field-error"></div>
+            </div>
+        </div>
+
+        <!-- Time Range -->
+        <div class="card">
+            <h2>Time Range</h2>
+
+            <!-- Start -->
+            <div class="field-group">
+                <label for="start-datetime">Start</label>
+                <div class="field-row">
+                    <div class="field-group">
+                        <input type="datetime-local" id="start-datetime" step="1"
+                               aria-describedby="start-error">
+                    </div>
+                    <div class="field-group">
+                        <select id="start-tz" aria-label="Start timezone"></select>
+                    </div>
+                    <button type="button" class="btn-small" id="btn-now"
+                            aria-label="Set start to current time">Now</button>
+                </div>
+                <div id="start-error" class="field-error" role="alert"></div>
+            </div>
+
+            <!-- End -->
+            <div class="field-group">
+                <label for="end-datetime">End</label>
+                <div class="field-row">
+                    <div class="field-group">
+                        <input type="datetime-local" id="end-datetime" step="1"
+                               aria-describedby="end-error">
+                    </div>
+                    <div class="field-group">
+                        <select id="end-tz" aria-label="End timezone"></select>
+                    </div>
+                </div>
+                <div id="end-error" class="field-error" role="alert"></div>
+            </div>
+        </div>
+
+        <!-- Window Duration -->
+        <div class="card">
+            <h2>Window Duration</h2>
+            <div class="field-row">
+                <div class="field-group">
+                    <label for="window-days">Days</label>
+                    <input type="number" id="window-days" min="0" value="1"
+                           aria-describedby="window-error">
+                </div>
+                <div class="field-group">
+                    <label for="window-hours">Hours</label>
+                    <input type="number" id="window-hours" min="0" max="23" value="0"
+                           aria-describedby="window-error">
+                </div>
+            </div>
+            <div id="window-error" class="field-error" role="alert"></div>
+        </div>
+
+        <!-- Probability -->
+        <div class="card">
+            <h2>Probability</h2>
+            <div class="field-group">
+                <label for="probability">Probability (%)</label>
+                <input type="number" id="probability" min="0" max="100" step="any"
+                       placeholder="e.g. 50" aria-describedby="probability-error">
+                <div id="probability-error" class="field-error" role="alert"></div>
+            </div>
+        </div>
+
+        <!-- Calculate -->
+        <button type="button" class="btn-primary" id="btn-calculate">Calculate</button>
+
+        <!-- Results -->
+        <div id="results-section" class="card" style="margin-top:1rem;" aria-live="polite">
+            <h2>Results</h2>
+            <table class="results-table" aria-label="Calculation results">
+                <thead>
+                    <tr>
+                        <th scope="col">Step</th>
+                        <th scope="col">Value</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        "use strict";
+
+        /* ── Timezone data ────────────────────────────────────── */
+        var TIMEZONES = [
+            { label: "UTC (+00:00)",            offset: "+00:00", iana: "UTC" },
+            { label: "US Eastern (−05:00)",     offset: "-05:00", iana: "America/New_York" },
+            { label: "US Central (−06:00)",     offset: "-06:00", iana: "America/Chicago" },
+            { label: "US Mountain (−07:00)",    offset: "-07:00", iana: "America/Denver" },
+            { label: "US Pacific (−08:00)",     offset: "-08:00", iana: "America/Los_Angeles" },
+            { label: "US Alaska (−09:00)",      offset: "-09:00", iana: "America/Anchorage" },
+            { label: "US Hawaii (−10:00)",      offset: "-10:00", iana: "Pacific/Honolulu" },
+            { label: "India (IST +05:30)",      offset: "+05:30", iana: "Asia/Kolkata" },
+            { label: "China (CST +08:00)",      offset: "+08:00", iana: "Asia/Shanghai" },
+            { label: "Japan (JST +09:00)",      offset: "+09:00", iana: "Asia/Tokyo" },
+            { label: "UK (GMT +00:00)",         offset: "+00:00", iana: "Europe/London" },
+            { label: "CET (+01:00)",            offset: "+01:00", iana: "Europe/Berlin" },
+            { label: "Australia Eastern (+11:00)", offset: "+11:00", iana: "Australia/Sydney" }
+        ];
+
+        /* ── DOM refs ─────────────────────────────────────────── */
+        var $banner       = document.getElementById("banner");
+        var $authToken    = document.getElementById("auth-token");
+        var $modeSelect   = document.getElementById("mode-select");
+        var $startDT      = document.getElementById("start-datetime");
+        var $startTZ      = document.getElementById("start-tz");
+        var $endDT        = document.getElementById("end-datetime");
+        var $endTZ        = document.getElementById("end-tz");
+        var $windowDays   = document.getElementById("window-days");
+        var $windowHours  = document.getElementById("window-hours");
+        var $probability  = document.getElementById("probability");
+        var $btnNow       = document.getElementById("btn-now");
+        var $btnCalc      = document.getElementById("btn-calculate");
+        var $resultsSection = document.getElementById("results-section");
+        var $resultsBody  = document.getElementById("results-body");
+
+        /* Error display elements */
+        var errorEls = {
+            "auth-token":  document.getElementById("auth-token-error"),
+            "time_range":  document.getElementById("start-error"),
+            "time_range.start": document.getElementById("start-error"),
+            "time_range.end":   document.getElementById("end-error"),
+            "window":      document.getElementById("window-error"),
+            "window.days": document.getElementById("window-error"),
+            "window.hours":document.getElementById("window-error"),
+            "probability": document.getElementById("probability-error")
+        };
+
+        /* ── Per-mode state preservation ──────────────────────── */
+        var modeState = {};
+
+        function saveCurrentModeState() {
+            var mode = $modeSelect.value;
+            modeState[mode] = {
+                startDT:     $startDT.value,
+                startTZ:     $startTZ.value,
+                endDT:       $endDT.value,
+                endTZ:       $endTZ.value,
+                windowDays:  $windowDays.value,
+                windowHours: $windowHours.value,
+                probability: $probability.value
+            };
+        }
+
+        function restoreModeState(mode) {
+            var s = modeState[mode];
+            if (!s) return;
+            $startDT.value     = s.startDT;
+            $startTZ.value     = s.startTZ;
+            $endDT.value       = s.endDT;
+            $endTZ.value       = s.endTZ;
+            $windowDays.value  = s.windowDays;
+            $windowHours.value = s.windowHours;
+            $probability.value = s.probability;
+        }
+
+        $modeSelect.addEventListener("change", function () {
+            saveCurrentModeState();
+            restoreModeState($modeSelect.value);
+        });
+
+        /* ── Populate timezone dropdowns ──────────────────────── */
+        function populateTZ(selectEl) {
+            TIMEZONES.forEach(function (tz) {
+                var opt = document.createElement("option");
+                opt.value = tz.offset;
+                opt.textContent = tz.label;
+                selectEl.appendChild(opt);
+            });
+        }
+        populateTZ($startTZ);
+        populateTZ($endTZ);
+
+        /* ── Detect browser local TZ offset ───────────────────── */
+        function getLocalOffsetString() {
+            var now = new Date();
+            var offsetMin = now.getTimezoneOffset(); // minutes, positive = behind UTC
+            var sign = offsetMin <= 0 ? "+" : "-";
+            var absMin = Math.abs(offsetMin);
+            var h = String(Math.floor(absMin / 60)).padStart(2, "0");
+            var m = String(absMin % 60).padStart(2, "0");
+            return sign + h + ":" + m;
+        }
+
+        function selectClosestTZ(selectEl, targetOffset) {
+            for (var i = 0; i < selectEl.options.length; i++) {
+                if (selectEl.options[i].value === targetOffset) {
+                    selectEl.value = targetOffset;
+                    return;
+                }
+            }
+            // Fallback: pick UTC
+            selectEl.value = "+00:00";
+        }
+
+        /* ── "Now" helper ─────────────────────────────────────── */
+        function setNow() {
+            var now = new Date();
+            // Format for datetime-local: YYYY-MM-DDThh:mm:ss
+            var y = now.getFullYear();
+            var mo = String(now.getMonth() + 1).padStart(2, "0");
+            var d = String(now.getDate()).padStart(2, "0");
+            var h = String(now.getHours()).padStart(2, "0");
+            var mi = String(now.getMinutes()).padStart(2, "0");
+            var s = String(now.getSeconds()).padStart(2, "0");
+            $startDT.value = y + "-" + mo + "-" + d + "T" + h + ":" + mi + ":" + s;
+            selectClosestTZ($startTZ, getLocalOffsetString());
+        }
+
+        $btnNow.addEventListener("click", setNow);
+
+        /* ── Defaults ─────────────────────────────────────────── */
+        setNow();                                       // Start = Now in local TZ
+        selectClosestTZ($endTZ, "-05:00");              // End TZ = US Eastern
+
+        /* ── UI helpers ───────────────────────────────────────── */
+        function clearErrors() {
+            Object.keys(errorEls).forEach(function (k) {
+                if (errorEls[k]) errorEls[k].textContent = "";
+            });
+        }
+
+        function showBanner(msg, type) {
+            $banner.textContent = msg;
+            $banner.className = "banner " + type;
+            $banner.style.display = "block";
+        }
+
+        function hideBanner() {
+            $banner.style.display = "none";
+            $banner.textContent = "";
+        }
+
+        function hideResults() {
+            $resultsSection.style.display = "none";
+        }
+
+        function showFieldError(field, message) {
+            // Try exact match first, then prefix match
+            var el = errorEls[field];
+            if (!el) {
+                // Try to find a parent field match
+                var keys = Object.keys(errorEls);
+                for (var i = 0; i < keys.length; i++) {
+                    if (field.indexOf(keys[i]) === 0 || keys[i].indexOf(field) === 0) {
+                        el = errorEls[keys[i]];
+                        break;
+                    }
+                }
+            }
+            if (el) {
+                el.textContent = message;
+            }
+        }
+
+        /* ── Build ISO 8601 timestamp ─────────────────────────── */
+        function buildISO(datetimeLocalValue, offsetValue) {
+            // datetime-local gives "YYYY-MM-DDThh:mm" or "YYYY-MM-DDThh:mm:ss"
+            if (!datetimeLocalValue) return "";
+            return datetimeLocalValue + offsetValue;
+        }
+
+        /* ── Display results ──────────────────────────────────── */
+        function displayResults(data) {
+            var steps = data.steps;
+            $resultsBody.innerHTML = "";
+
+            var rows = [
+                ["Lambda (λ)",            steps.lambda_value],
+                ["Window (hours)",        steps.window_hours],
+                ["Scaling Factor",        steps.scaling_factor],
+                ["Annualized Frequency",  steps.annualized_frequency]
+            ];
+
+            rows.forEach(function (row, idx) {
+                var tr = document.createElement("tr");
+                if (idx === rows.length - 1) tr.className = "highlight";
+
+                var th = document.createElement("td");
+                th.textContent = row[0];
+                tr.appendChild(th);
+
+                var td = document.createElement("td");
+                td.textContent = typeof row[1] === "number"
+                    ? (Number.isInteger(row[1]) ? row[1] : row[1].toFixed(6))
+                    : row[1];
+                tr.appendChild(td);
+
+                $resultsBody.appendChild(tr);
+            });
+
+            $resultsSection.style.display = "block";
+        }
+
+        /* ── Calculate ────────────────────────────────────────── */
+        $btnCalc.addEventListener("click", function () {
+            clearErrors();
+            hideBanner();
+            hideResults();
+
+            var token = $authToken.value.trim();
+            if (!token) {
+                showFieldError("auth-token", "Auth token is required.");
+                return;
+            }
+
+            var startISO = buildISO($startDT.value, $startTZ.value);
+            var endISO   = buildISO($endDT.value, $endTZ.value);
+
+            var payload = {
+                time_range: {
+                    start: startISO,
+                    end:   endISO
+                },
+                window: {
+                    days:  parseInt($windowDays.value, 10) || 0,
+                    hours: parseInt($windowHours.value, 10) || 0
+                },
+                probability: parseFloat($probability.value),
+                mode: $modeSelect.value
+            };
+
+            fetch("/api/calculate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": token
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(function (resp) {
+                if (resp.ok) {
+                    return resp.json().then(function (data) {
+                        displayResults(data);
+                        showBanner("Calculation complete.", "success");
+                    });
+                }
+
+                if (resp.status === 422) {
+                    return resp.json().then(function (data) {
+                        hideResults();
+                        if (data.errors && Array.isArray(data.errors)) {
+                            data.errors.forEach(function (err) {
+                                showFieldError(err.field, err.message);
+                            });
+                            showBanner("Please fix the validation errors below.", "error");
+                        } else {
+                            showBanner("Validation error.", "error");
+                        }
+                    });
+                }
+
+                if (resp.status === 401) {
+                    hideResults();
+                    showFieldError("auth-token", "Invalid or missing auth token.");
+                    showBanner("Authentication failed. Check your auth token.", "error");
+                    return;
+                }
+
+                // Other errors
+                hideResults();
+                showBanner("Unexpected error (HTTP " + resp.status + ").", "error");
+            })
+            .catch(function () {
+                hideResults();
+                showBanner("Network error — could not reach the server.", "error");
+            });
+        });
+
+        /* ── Save initial state for default mode ──────────────── */
+        saveCurrentModeState();
+
+    })();
+    </script>
 </body>
 </html>

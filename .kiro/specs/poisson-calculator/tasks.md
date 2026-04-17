@@ -137,8 +137,8 @@ Build a FastAPI-based Poisson calculator web application with token-based authen
 - [x] 7. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement the frontend
-  - [ ] 8.1 Create `static/index.html` with the single-page layout
+- [x] 8. Implement the frontend
+  - [x] 8.1 Create `static/index.html` with the single-page layout
     - Add Mode Selector dropdown with "Poisson" as default and only option
     - Add Time Range section: two timestamp selectors (Start, End) with date, time, and timezone inputs
     - Default Start to "Now" in browser local timezone; default End timezone to US Eastern
@@ -150,7 +150,7 @@ Build a FastAPI-based Poisson calculator web application with token-based authen
     - Add per-field error display areas adjacent to each input
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 3.1, 4.6, 5.2, 5.3, 5.4, 6.1, 6.2, 7.2_
 
-  - [ ] 8.2 Implement inline JavaScript for API communication and UI logic
+  - [x] 8.2 Implement inline JavaScript for API communication and UI logic
     - Collect all inputs, format timestamps as ISO 8601 with timezone offset
     - POST to `/api/calculate` with `Authorization` header containing the auth token
     - On success: clear errors, display Calculation_Steps and Annualized_Frequency in the results section
@@ -160,13 +160,13 @@ Build a FastAPI-based Poisson calculator web application with token-based authen
     - Implement per-mode input state preservation in a JS object
     - _Requirements: 5.2, 5.3, 5.4, 6.3, 9.1_
 
-  - [ ] 8.3 Add responsive and accessible styling with inline CSS
+  - [x] 8.3 Add responsive and accessible styling with inline CSS
     - Use classless or minimal CSS for clean, readable design
     - Ensure layout adapts from 320px to 1920px without horizontal scrolling
     - Ensure all interactive controls are keyboard-navigable and screen-reader compatible (labels, ARIA attributes)
     - _Requirements: 7.1, 7.3, 7.4, 7.5_
 
-- [ ] 9. Final checkpoint - Ensure all tests pass
+- [x] 9. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
