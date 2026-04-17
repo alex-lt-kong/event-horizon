@@ -92,11 +92,11 @@
             <div class="field-group">
                 <label for="start-datetime">Start</label>
                 <div class="field-row">
-                    <div class="field-group">
+                    <div class="field-group" style="flex:3;">
                         <input type="text" id="start-datetime" placeholder="YYYY-MM-DD HH:MM:SS"
                                aria-describedby="start-error">
                     </div>
-                    <div class="field-group">
+                    <div class="field-group" style="flex:2;">
                         <select id="start-tz" aria-label="Start timezone"></select>
                     </div>
                     <button type="button" class="btn-small" id="btn-now"
@@ -107,13 +107,14 @@
             <div class="field-group">
                 <label for="end-datetime">End</label>
                 <div class="field-row">
-                    <div class="field-group">
+                    <div class="field-group" style="flex:3;">
                         <input type="text" id="end-datetime" placeholder="YYYY-MM-DD HH:MM:SS"
                                aria-describedby="end-error">
                     </div>
-                    <div class="field-group">
+                    <div class="field-group" style="flex:2;">
                         <select id="end-tz" aria-label="End timezone"></select>
                     </div>
+                    <div style="width:3.5rem;flex-shrink:0;"></div>
                 </div>
                 <div id="end-error" class="field-error" role="alert"></div>
             </div>
