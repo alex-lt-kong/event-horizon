@@ -172,7 +172,7 @@ def test_probability_rejects_out_of_range(probability: float) -> None:
     For any probability value <= 0 or >= 100, the backend SHALL return
     a validation error on the probability field.
     """
-    # Build a full CalculationRequest with valid time_range and window,
+    # Build a full CalculationRequest with valid time_range,
     # but invalid probability
     start = datetime(2024, 1, 1, tzinfo=timezone.utc)
     end = datetime(2024, 6, 1, tzinfo=timezone.utc)
@@ -180,7 +180,6 @@ def test_probability_rejects_out_of_range(probability: float) -> None:
     with pytest.raises(ValidationError) as exc_info:
         CalculationRequest(
             time_range={"start": start, "end": end},
-            window={"days": 1, "hours": 0},
             probability=probability,
         )
 
@@ -203,13 +202,11 @@ def test_probability_rejects_out_of_range(probability: float) -> None:
 
 @given(
     invalid_time_range=st.booleans(),
-    invalid_window=st.booleans(),
     invalid_probability=st.booleans(),
 )
 @settings(max_examples=200)
 def test_structured_errors_identify_all_invalid_fields(
     invalid_time_range: bool,
-    invalid_window: bool,
     invalid_probability: bool,
 ) -> None:
     """**Validates: Requirements 5.1, 8.3**
@@ -219,7 +216,7 @@ def test_structured_errors_identify_all_invalid_fields(
     fields matches exactly the set of fields that are invalid.
     """
     # Need at least one invalid field
-    assume(invalid_time_range or invalid_window or invalid_probability)
+    assume(invalid_time_range or invalid_probability)
 
     # Build request data
     if invalid_time_range:
@@ -232,12 +229,6 @@ def test_structured_errors_identify_all_invalid_fields(
             "end": datetime(2024, 6, 1, tzinfo=timezone.utc),
         }
 
-    if invalid_window:
-        # zero duration -> invalid
-        window_data = {"days": 0, "hours": 0}
-    else:
-        window_data = {"days": 1, "hours": 0}
-
     if invalid_probability:
         # out of range -> invalid
         probability_val = 0.0
@@ -247,7 +238,6 @@ def test_structured_errors_identify_all_invalid_fields(
     with pytest.raises(ValidationError) as exc_info:
         CalculationRequest(
             time_range=time_range_data,
-            window=window_data,
             probability=probability_val,
         )
 
@@ -265,8 +255,6 @@ def test_structured_errors_identify_all_invalid_fields(
     expected_invalid = set()
     if invalid_time_range:
         expected_invalid.add("time_range")
-    if invalid_window:
-        expected_invalid.add("window")
     if invalid_probability:
         expected_invalid.add("probability")
 
@@ -277,7 +265,7 @@ def test_structured_errors_identify_all_invalid_fields(
         )
 
     # Errors should not flag fields that are valid
-    valid_fields = {"time_range", "window", "probability"} - expected_invalid
+    valid_fields = {"time_range", "probability"} - expected_invalid
     for field in valid_fields:
         assert field not in error_top_fields, (
             f"Unexpected error for valid field '{field}': {error_top_fields}"

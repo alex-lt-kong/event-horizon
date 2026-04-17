@@ -43,7 +43,6 @@ class CalculationRequest(BaseModel):
     """Incoming request body for the /api/calculate endpoint."""
 
     time_range: TimestampRange = Field(..., description="Observation time range")
-    window: WindowDuration = Field(..., description="Observation window duration (derived from time range)")
     probability: float = Field(..., gt=0, lt=100, description="Observed probability as a percentage, strictly between 0 and 100", examples=[30.0])
 
     @field_validator("probability")

@@ -55,6 +55,7 @@ async def calculate(
     """Validate inputs, run Poisson calculation, and return all steps.
 
     - Converts timestamps to UTC
+    - Computes window duration from the time range
     - Runs the calculation pipeline
     - Returns structured CalculationResponse with UTC time range and steps
     """
@@ -62,11 +63,17 @@ async def calculate(
     start_utc = request.time_range.start.astimezone(timezone.utc)
     end_utc = request.time_range.end.astimezone(timezone.utc)
 
+    # Compute window duration from time range
+    diff_seconds = (end_utc - start_utc).total_seconds()
+    total_hours = diff_seconds / 3600
+    days = int(total_hours // 24)
+    hours = int(total_hours % 24)
+
     # Run the Poisson calculation
     result = calculate_poisson(
         probability_pct=request.probability,
-        days=request.window.days,
-        hours=request.window.hours,
+        days=days,
+        hours=hours,
     )
 
     # Build the response — convert dataclass CalculationSteps to Pydantic model
