@@ -1,9 +1,18 @@
 """Authentication module for the Poisson Calculator API.
 
-Manages token loading from a flat file, file-change detection, and
+Manages token loading from a JSON config file, file-change detection, and
 request authentication via a FastAPI dependency.
+
+Config file format (JSON):
+    {
+        "users": {
+            "alice": "550e8400-e29b-41d4-a716-446655440000",
+            "bob":   "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+        }
+    }
 """
 
+import json
 import logging
 import os
 import uuid
@@ -15,16 +24,17 @@ logger = logging.getLogger(__name__)
 
 
 class TokenStore:
-    """Loads UUID tokens from a plain-text file and watches for changes.
+    """Loads user tokens from a JSON config file and watches for changes.
 
-    Tokens are stored in a ``set`` for O(1) lookup.  The file's last-modified
-    timestamp is tracked so the store can be reloaded automatically when the
-    file changes on disk.
+    The config file maps usernames to UUID tokens.  Tokens are stored in
+    a ``dict`` (token → username) for O(1) lookup.  The file's
+    last-modified timestamp is tracked so the store can be reloaded
+    automatically when the file changes on disk.
     """
 
-    def __init__(self, token_file_path: str) -> None:
-        self._path = token_file_path
-        self._tokens: set[str] = set()
+    def __init__(self, config_file_path: str) -> None:
+        self._path = config_file_path
+        self._token_to_user: dict[str, str] = {}
         self._last_mtime: Optional[float] = None
         self._file_available: bool = False
         self.load_tokens()
@@ -34,41 +44,54 @@ class TokenStore:
     # ------------------------------------------------------------------
 
     def load_tokens(self) -> None:
-        """Read the token file and populate the internal token set.
+        """Read the JSON config file and populate the internal token map.
 
-        Each line is expected to contain a single UUID.  Blank lines and
-        lines that are not valid UUIDs are skipped with a warning log.
-        If the file is missing or unreadable the token set is cleared and
-        all subsequent ``is_valid`` calls will return ``False``.
+        Expected structure: ``{"users": {"username": "uuid-token", ...}}``.
+        Entries with invalid UUID values are skipped with a warning log.
+        If the file is missing, unreadable, or malformed the token map is
+        cleared and all subsequent ``is_valid`` calls will return ``False``.
         """
         try:
             with open(self._path, "r") as fh:
-                raw_lines = fh.readlines()
+                data = json.load(fh)
         except (OSError, IOError) as exc:
-            logger.error("Unable to read token file '%s': %s", self._path, exc)
-            self._tokens = set()
+            logger.error("Unable to read config file '%s': %s", self._path, exc)
+            self._token_to_user = {}
+            self._file_available = False
+            self._last_mtime = None
+            return
+        except json.JSONDecodeError as exc:
+            logger.error("Invalid JSON in config file '%s': %s", self._path, exc)
+            self._token_to_user = {}
             self._file_available = False
             self._last_mtime = None
             return
 
-        tokens: set[str] = set()
-        for lineno, line in enumerate(raw_lines, start=1):
-            stripped = line.strip()
-            if not stripped:
-                continue
+        users = data.get("users", {})
+        if not isinstance(users, dict):
+            logger.error(
+                "Config file '%s': 'users' must be an object, got %s",
+                self._path,
+                type(users).__name__,
+            )
+            self._token_to_user = {}
+            self._file_available = False
+            return
+
+        token_to_user: dict[str, str] = {}
+        for username, token_value in users.items():
             try:
-                # Validate UUID format and normalise to lowercase string
-                parsed = uuid.UUID(stripped)
-                tokens.add(str(parsed))
-            except ValueError:
+                normalised = str(uuid.UUID(str(token_value)))
+                token_to_user[normalised] = str(username)
+            except (ValueError, AttributeError):
                 logger.warning(
-                    "Skipping invalid token on line %d of '%s': %s",
-                    lineno,
+                    "Skipping user '%s' in '%s': invalid UUID token '%s'",
+                    username,
                     self._path,
-                    stripped,
+                    token_value,
                 )
 
-        self._tokens = tokens
+        self._token_to_user = token_to_user
         self._file_available = True
 
         try:
@@ -84,10 +107,20 @@ class TokenStore:
             normalised = str(uuid.UUID(token))
         except (ValueError, AttributeError):
             return False
-        return normalised in self._tokens
+        return normalised in self._token_to_user
+
+    def get_username(self, token: str) -> Optional[str]:
+        """Return the username associated with *token*, or ``None``."""
+        if not self._file_available:
+            return None
+        try:
+            normalised = str(uuid.UUID(token))
+        except (ValueError, AttributeError):
+            return None
+        return self._token_to_user.get(normalised)
 
     def reload_if_modified(self) -> None:
-        """Reload the token file if its modification time has changed.
+        """Reload the config file if its modification time has changed.
 
         If the file has become unreadable since the last successful load
         the previously loaded tokens are kept and a warning is logged.
@@ -97,7 +130,7 @@ class TokenStore:
         except OSError:
             if self._file_available:
                 logger.warning(
-                    "Token file '%s' is no longer accessible; "
+                    "Config file '%s' is no longer accessible; "
                     "keeping previously loaded tokens.",
                     self._path,
                 )
@@ -108,7 +141,7 @@ class TokenStore:
 
     @property
     def file_available(self) -> bool:
-        """Whether the token file was successfully loaded at least once."""
+        """Whether the config file was successfully loaded at least once."""
         return self._file_available
 
 
@@ -116,8 +149,8 @@ class TokenStore:
 # Module-level singleton
 # ------------------------------------------------------------------
 
-_token_file_path: str = os.environ.get("TOKEN_FILE_PATH", "tokens.txt")
-token_store: TokenStore = TokenStore(_token_file_path)
+_config_file_path: str = os.environ.get("CONFIG_FILE_PATH", "config.json")
+token_store: TokenStore = TokenStore(_config_file_path)
 
 
 # ------------------------------------------------------------------

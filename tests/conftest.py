@@ -1,5 +1,7 @@
 """Shared test fixtures for the Poisson Calculator test suite."""
 
+import json
+
 import pytest
 import pytest_asyncio
 import httpx
@@ -23,22 +25,24 @@ def invalid_token() -> str:
 
 @pytest.fixture()
 def token_file(tmp_path):
-    """Create a temporary token file with one valid token.
+    """Create a temporary JSON config file with one valid user/token.
 
-    Yields the path to the temp file. The file is cleaned up automatically
+    Returns the path to the temp file. The file is cleaned up automatically
     by pytest's tmp_path fixture.
     """
-    token_path = tmp_path / "tokens.txt"
-    token_path.write_text(VALID_TOKEN + "\n")
-    return str(token_path)
+    config_path = tmp_path / "config.json"
+    config_data = {"users": {"testuser": VALID_TOKEN}}
+    config_path.write_text(json.dumps(config_data))
+    return str(config_path)
 
 
 @pytest.fixture()
 def empty_token_file(tmp_path):
-    """Create an empty temporary token file (no valid tokens)."""
-    token_path = tmp_path / "tokens_empty.txt"
-    token_path.write_text("")
-    return str(token_path)
+    """Create a temporary JSON config file with no users."""
+    config_path = tmp_path / "config_empty.json"
+    config_data = {"users": {}}
+    config_path.write_text(json.dumps(config_data))
+    return str(config_path)
 
 
 @pytest_asyncio.fixture()
@@ -46,7 +50,7 @@ async def async_client(token_file):
     """Provide an async HTTP test client wired to the FastAPI app.
 
     Patches the module-level token_store in app.auth so the app uses
-    the temporary token file, then yields an httpx.AsyncClient configured
+    the temporary config file, then yields an httpx.AsyncClient configured
     with the app's ASGI transport.
     """
     import app.auth as auth_module
