@@ -92,7 +92,7 @@ async def calculate(
     )
 
     return CalculationResponse(
-        mode=request.mode,
+        mode="poisson",
         time_range_utc=TimestampRange(start=start_utc, end=end_utc),
         steps=steps,
         survival=survival,

@@ -12,8 +12,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 class TimestampRange(BaseModel):
     """A pair of timezone-aware timestamps defining an observation period."""
 
-    start: datetime
-    end: datetime
+    start: datetime = Field(..., description="Start of observation period (ISO 8601 with timezone)", examples=["2026-01-01T00:00:00+00:00"])
+    end: datetime = Field(..., description="End of observation period (ISO 8601 with timezone)", examples=["2026-06-01T23:59:59-05:00"])
 
     @model_validator(mode="after")
     def start_must_precede_end(self) -> "TimestampRange":
@@ -42,10 +42,9 @@ class WindowDuration(BaseModel):
 class CalculationRequest(BaseModel):
     """Incoming request body for the /api/calculate endpoint."""
 
-    time_range: TimestampRange
-    window: WindowDuration
-    probability: float
-    mode: str = "poisson"
+    time_range: TimestampRange = Field(..., description="Observation time range")
+    window: WindowDuration = Field(..., description="Observation window duration (derived from time range)")
+    probability: float = Field(..., gt=0, lt=100, description="Observed probability as a percentage, strictly between 0 and 100", examples=[30.0])
 
     @field_validator("probability")
     @classmethod

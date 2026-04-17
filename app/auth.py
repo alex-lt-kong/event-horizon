@@ -158,7 +158,7 @@ token_store: TokenStore = TokenStore(_config_file_path)
 # ------------------------------------------------------------------
 
 
-async def verify_token(authorization: str = Header(default=None)) -> str:
+async def verify_token(authorization: str = Header(default=None, description="Your UUID auth token")) -> str:
     """FastAPI dependency that validates the ``Authorization`` header.
 
     Extracts the token, triggers a file-change check on the store, and

@@ -385,8 +385,7 @@
             var payload = {
                 time_range: { start: buildISO($startDT.value, $startTZ.value), end: buildISO($endDT.value, $endTZ.value) },
                 window: { days: win.days, hours: win.hours },
-                probability: probVal,
-                mode: "poisson"
+                probability: probVal
             };
 
             fetch("/api/calculate", {
