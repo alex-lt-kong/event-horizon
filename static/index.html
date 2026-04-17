@@ -207,7 +207,8 @@
                 <label for="start-datetime">Start</label>
                 <div class="field-row">
                     <div class="field-group">
-                        <input type="datetime-local" id="start-datetime" step="1"
+                        <input type="text" id="start-datetime"
+                               placeholder="YYYY-MM-DD HH:MM:SS"
                                aria-describedby="start-error">
                     </div>
                     <div class="field-group">
@@ -224,7 +225,8 @@
                 <label for="end-datetime">End</label>
                 <div class="field-row">
                     <div class="field-group">
-                        <input type="datetime-local" id="end-datetime" step="1"
+                        <input type="text" id="end-datetime"
+                               placeholder="YYYY-MM-DD HH:MM:SS"
                                aria-describedby="end-error">
                     </div>
                     <div class="field-group">
@@ -292,20 +294,24 @@
         var AUTH_TOKEN = pathParts.length > 0 ? pathParts[0] : "";
 
         /* ── Timezone data ────────────────────────────────────── */
+        // Detect browser timezone offset string
+        function getLocalOffsetString() {
+            var now = new Date();
+            var offsetMin = now.getTimezoneOffset();
+            var sign = offsetMin <= 0 ? "+" : "-";
+            var absMin = Math.abs(offsetMin);
+            var h = String(Math.floor(absMin / 60)).padStart(2, "0");
+            var m = String(absMin % 60).padStart(2, "0");
+            return sign + h + ":" + m;
+        }
+
+        var localOffset = getLocalOffsetString();
+        var localLabel = "Browser Local (" + localOffset + ")";
+
         var TIMEZONES = [
-            { label: "UTC (+00:00)",            offset: "+00:00", iana: "UTC" },
-            { label: "US Eastern (\u221205:00)",     offset: "-05:00", iana: "America/New_York" },
-            { label: "US Central (\u221206:00)",     offset: "-06:00", iana: "America/Chicago" },
-            { label: "US Mountain (\u221207:00)",    offset: "-07:00", iana: "America/Denver" },
-            { label: "US Pacific (\u221208:00)",     offset: "-08:00", iana: "America/Los_Angeles" },
-            { label: "US Alaska (\u221209:00)",      offset: "-09:00", iana: "America/Anchorage" },
-            { label: "US Hawaii (\u221210:00)",      offset: "-10:00", iana: "Pacific/Honolulu" },
-            { label: "India (IST +05:30)",      offset: "+05:30", iana: "Asia/Kolkata" },
-            { label: "China (CST +08:00)",      offset: "+08:00", iana: "Asia/Shanghai" },
-            { label: "Japan (JST +09:00)",      offset: "+09:00", iana: "Asia/Tokyo" },
-            { label: "UK (GMT +00:00)",         offset: "+00:00", iana: "Europe/London" },
-            { label: "CET (+01:00)",            offset: "+01:00", iana: "Europe/Berlin" },
-            { label: "Australia Eastern (+11:00)", offset: "+11:00", iana: "Australia/Sydney" }
+            { label: localLabel,                offset: localOffset },
+            { label: "US Eastern (\u221205:00)", offset: "-05:00" },
+            { label: "UTC (+00:00)",            offset: "+00:00" }
         ];
 
         /* ── DOM refs ─────────────────────────────────────────── */
@@ -345,27 +351,6 @@
         populateTZ($startTZ);
         populateTZ($endTZ);
 
-        /* ── Detect browser local TZ offset ───────────────────── */
-        function getLocalOffsetString() {
-            var now = new Date();
-            var offsetMin = now.getTimezoneOffset();
-            var sign = offsetMin <= 0 ? "+" : "-";
-            var absMin = Math.abs(offsetMin);
-            var h = String(Math.floor(absMin / 60)).padStart(2, "0");
-            var m = String(absMin % 60).padStart(2, "0");
-            return sign + h + ":" + m;
-        }
-
-        function selectClosestTZ(selectEl, targetOffset) {
-            for (var i = 0; i < selectEl.options.length; i++) {
-                if (selectEl.options[i].value === targetOffset) {
-                    selectEl.value = targetOffset;
-                    return;
-                }
-            }
-            selectEl.value = "+00:00";
-        }
-
         /* ── "Now" helper ─────────────────────────────────────── */
         function setNow() {
             var now = new Date();
@@ -375,15 +360,15 @@
             var h = String(now.getHours()).padStart(2, "0");
             var mi = String(now.getMinutes()).padStart(2, "0");
             var s = String(now.getSeconds()).padStart(2, "0");
-            $startDT.value = y + "-" + mo + "-" + d + "T" + h + ":" + mi + ":" + s;
-            selectClosestTZ($startTZ, getLocalOffsetString());
+            $startDT.value = y + "-" + mo + "-" + d + " " + h + ":" + mi + ":" + s;
+            $startTZ.value = localOffset;
         }
 
         $btnNow.addEventListener("click", setNow);
 
         /* ── Defaults ─────────────────────────────────────────── */
         setNow();
-        selectClosestTZ($endTZ, "-05:00");
+        $endTZ.value = "-05:00";
 
         /* ── UI helpers ───────────────────────────────────────── */
         function clearErrors() {
@@ -424,9 +409,13 @@
         }
 
         /* ── Build ISO 8601 timestamp ─────────────────────────── */
-        function buildISO(datetimeLocalValue, offsetValue) {
-            if (!datetimeLocalValue) return "";
-            return datetimeLocalValue + offsetValue;
+        function buildISO(datetimeValue, offsetValue) {
+            // Input: "YYYY-MM-DD HH:MM:SS", Output: "YYYY-MM-DDTHH:MM:SS+HH:MM"
+            if (!datetimeValue) return "";
+            var trimmed = datetimeValue.trim();
+            // Replace space with T for ISO 8601
+            var isoDate = trimmed.replace(" ", "T");
+            return isoDate + offsetValue;
         }
 
         /* ── Display results ──────────────────────────────────── */
