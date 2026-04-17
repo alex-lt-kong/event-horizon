@@ -198,18 +198,6 @@
         <!-- Banner for general errors / success -->
         <div id="banner" class="banner" role="alert" aria-live="polite"></div>
 
-        <!-- Mode Selector -->
-        <div class="card">
-            <h2>Calculation Mode</h2>
-            <div class="field-group">
-                <label for="mode-select">Mode</label>
-                <select id="mode-select" aria-describedby="mode-desc">
-                    <option value="poisson" selected>Poisson</option>
-                </select>
-                <div id="mode-desc" class="field-error"></div>
-            </div>
-        </div>
-
         <!-- Time Range -->
         <div class="card">
             <h2>Time Range</h2>
@@ -322,7 +310,6 @@
 
         /* ── DOM refs ─────────────────────────────────────────── */
         var $banner       = document.getElementById("banner");
-        var $modeSelect   = document.getElementById("mode-select");
         var $startDT      = document.getElementById("start-datetime");
         var $startTZ      = document.getElementById("start-tz");
         var $endDT        = document.getElementById("end-datetime");
@@ -345,39 +332,6 @@
             "window.hours":document.getElementById("window-error"),
             "probability": document.getElementById("probability-error")
         };
-
-        /* ── Per-mode state preservation ──────────────────────── */
-        var modeState = {};
-
-        function saveCurrentModeState() {
-            var mode = $modeSelect.value;
-            modeState[mode] = {
-                startDT:     $startDT.value,
-                startTZ:     $startTZ.value,
-                endDT:       $endDT.value,
-                endTZ:       $endTZ.value,
-                windowDays:  $windowDays.value,
-                windowHours: $windowHours.value,
-                probability: $probability.value
-            };
-        }
-
-        function restoreModeState(mode) {
-            var s = modeState[mode];
-            if (!s) return;
-            $startDT.value     = s.startDT;
-            $startTZ.value     = s.startTZ;
-            $endDT.value       = s.endDT;
-            $endTZ.value       = s.endTZ;
-            $windowDays.value  = s.windowDays;
-            $windowHours.value = s.windowHours;
-            $probability.value = s.probability;
-        }
-
-        $modeSelect.addEventListener("change", function () {
-            saveCurrentModeState();
-            restoreModeState($modeSelect.value);
-        });
 
         /* ── Populate timezone dropdowns ──────────────────────── */
         function populateTZ(selectEl) {
@@ -531,7 +485,7 @@
                     hours: parseInt($windowHours.value, 10) || 0
                 },
                 probability: parseFloat($probability.value),
-                mode: $modeSelect.value
+                mode: "poisson"
             };
 
             fetch("/api/calculate", {
@@ -578,9 +532,6 @@
                 showBanner("Network error \u2014 could not reach the server.", "error");
             });
         });
-
-        /* ── Save initial state for default mode ──────────────── */
-        saveCurrentModeState();
 
     })();
     </script>

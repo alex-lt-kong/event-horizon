@@ -265,18 +265,18 @@ class TestStaticFileServing:
     """Test static file serving and root route."""
 
     @pytest.mark.asyncio
-    async def test_root_returns_html(
+    async def test_root_returns_401(
         self, async_client: httpx.AsyncClient
     ) -> None:
-        """GET / returns HTML content (landing page).
+        """GET / returns 401 with error message when no token provided.
 
         Validates: Requirements 8.4, 8.5
         """
         resp = await async_client.get("/")
 
-        assert resp.status_code == 200
-        assert "text/html" in resp.headers.get("content-type", "")
-        assert "Poisson Calculator" in resp.text
+        assert resp.status_code == 401
+        data = resp.json()
+        assert "detail" in data
 
     @pytest.mark.asyncio
     async def test_token_url_returns_html(

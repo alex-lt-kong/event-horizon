@@ -14,10 +14,10 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.auth import token_store
+from app import auth as auth_module
 from app.routes import router, validation_exception_handler
 
 app = FastAPI(title="Poisson Calculator", version="1.0.0")
@@ -43,17 +43,19 @@ app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
 
 @app.get("/", include_in_schema=False)
-async def root() -> FileResponse:
-    """Redirect or show a simple landing page."""
-    index_path = os.path.join(_static_dir, "index.html")
-    return FileResponse(index_path)
+async def root() -> JSONResponse:
+    """Return an error message when no token is provided in the URL."""
+    return JSONResponse(
+        status_code=401,
+        content={"detail": "Access denied. Use /{your-token} to access the calculator."},
+    )
 
 
 @app.get("/{token}", include_in_schema=False)
 async def token_root(token: str) -> FileResponse:
     """Serve the frontend if the token in the URL is valid."""
-    token_store.reload_if_modified()
-    if not token_store.is_valid(token):
+    auth_module.token_store.reload_if_modified()
+    if not auth_module.token_store.is_valid(token):
         raise HTTPException(status_code=401, detail="Invalid token")
     index_path = os.path.join(_static_dir, "index.html")
     return FileResponse(index_path)
