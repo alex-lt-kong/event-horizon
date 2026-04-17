@@ -4,185 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Poisson Calculator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        /* ── Reset & Base ─────────────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                         Helvetica, Arial, sans-serif, "Apple Color Emoji",
-                         "Segoe UI Emoji";
-            line-height: 1.6;
-            color: #1a1a1a;
-            background: #f5f5f5;
-            padding: 1rem;
+                         Helvetica, Arial, sans-serif;
+            line-height: 1.6; color: #1a1a1a; background: #f5f5f5; padding: 1rem;
         }
-
-        /* ── Layout ───────────────────────────────────────────── */
-        .container {
-            max-width: 640px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
+        .container { max-width: 640px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 1rem; text-align: center; }
         .card {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
+            background: #fff; border: 1px solid #ddd; border-radius: 8px;
+            padding: 1.25rem; margin-bottom: 1rem;
         }
-
         .card h2 {
-            font-size: 1rem;
-            margin-bottom: 0.75rem;
-            color: #333;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 0.4rem;
+            font-size: 1rem; margin-bottom: 0.75rem; color: #333;
+            border-bottom: 1px solid #eee; padding-bottom: 0.4rem;
         }
-
-        /* ── Banner ───────────────────────────────────────────── */
         .banner {
-            padding: 0.75rem 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            display: none;
-            font-size: 0.9rem;
+            padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem;
+            display: none; font-size: 0.9rem;
         }
         .banner.error   { background: #fdecea; color: #b71c1c; border: 1px solid #f5c6cb; }
         .banner.success { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; }
-
-        /* ── Form Elements ────────────────────────────────────── */
         label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            color: #444;
+            display: block; font-size: 0.85rem; font-weight: 600;
+            margin-bottom: 0.25rem; color: #444;
         }
-
-        input[type="text"],
-        input[type="number"],
-        input[type="datetime-local"],
-        select {
-            width: 100%;
-            padding: 0.5rem 0.6rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 0.95rem;
-            font-family: inherit;
-            background: #fff;
-            color: #1a1a1a;
-            transition: border-color 0.15s;
+        input[type="text"], input[type="number"], select {
+            width: 100%; padding: 0.5rem 0.6rem; border: 1px solid #ccc;
+            border-radius: 4px; font-size: 0.95rem; font-family: inherit;
+            background: #fff; color: #1a1a1a;
         }
-
         input:focus, select:focus {
-            outline: 2px solid #1976d2;
-            outline-offset: 1px;
-            border-color: #1976d2;
+            outline: 2px solid #1976d2; outline-offset: 1px; border-color: #1976d2;
         }
-
-        .field-group {
-            margin-bottom: 0.85rem;
-        }
-
-        .field-row {
-            display: flex;
-            gap: 0.75rem;
-            align-items: flex-end;
-        }
-
-        .field-row .field-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
+        .field-group { margin-bottom: 0.85rem; }
+        .field-row { display: flex; gap: 0.75rem; align-items: flex-end; }
+        .field-row .field-group { flex: 1; margin-bottom: 0; }
         .field-error {
-            color: #c62828;
-            font-size: 0.8rem;
-            min-height: 1.2em;
-            margin-top: 0.15rem;
+            color: #c62828; font-size: 0.8rem; min-height: 1.2em; margin-top: 0.15rem;
         }
-
-        /* ── Buttons ──────────────────────────────────────────── */
         button {
-            font-family: inherit;
-            font-size: 0.9rem;
-            border: none;
-            border-radius: 4px;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            transition: background 0.15s;
+            font-family: inherit; font-size: 0.9rem; border: none;
+            border-radius: 4px; padding: 0.5rem 1rem; cursor: pointer;
         }
-
-        .btn-primary {
-            background: #1976d2;
-            color: #fff;
-            width: 100%;
-            padding: 0.65rem;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-        .btn-primary:hover  { background: #1565c0; }
-        .btn-primary:focus-visible {
-            outline: 2px solid #1976d2;
-            outline-offset: 2px;
-        }
-
         .btn-small {
-            background: #e0e0e0;
-            color: #333;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.85rem;
-            white-space: nowrap;
+            background: #e0e0e0; color: #333; padding: 0.5rem 0.75rem;
+            font-size: 0.85rem; white-space: nowrap;
         }
         .btn-small:hover { background: #d0d0d0; }
-        .btn-small:focus-visible {
-            outline: 2px solid #1976d2;
-            outline-offset: 2px;
+        #results-section { display: none; }
+        .results-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .results-table th, .results-table td {
+            text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid #eee;
         }
-
-        /* ── Results Table ────────────────────────────────────── */
-        #results-section {
-            display: none;
-        }
-
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        .results-table th,
+        .results-table th { font-weight: 600; color: #555; width: 50%; }
         .results-table td {
-            text-align: left;
-            padding: 0.5rem 0.6rem;
-            border-bottom: 1px solid #eee;
+            font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
         }
-
-        .results-table th {
-            font-weight: 600;
-            color: #555;
-            width: 50%;
-        }
-
-        .results-table td {
-            font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas,
-                         monospace;
-        }
-
         .results-table tr.highlight td {
-            font-weight: 700;
-            font-size: 1rem;
-            color: #1565c0;
+            font-weight: 700; font-size: 1rem; color: #1565c0;
         }
-
-        /* ── Responsive ───────────────────────────────────────── */
+        .results-table tr.section-header td {
+            font-weight: 600; color: #333; background: #fafafa;
+            border-bottom: 2px solid #ddd; padding-top: 0.75rem;
+        }
+        /* Flatpickr input override */
+        .flatpickr-input { font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace !important; }
         @media (max-width: 480px) {
             body { padding: 0.5rem; }
             .card { padding: 1rem; }
@@ -194,20 +84,16 @@
 <body>
     <div class="container">
         <h1>Poisson Calculator</h1>
-
-        <!-- Banner for general errors / success -->
         <div id="banner" class="banner" role="alert" aria-live="polite"></div>
 
         <!-- Time Range -->
         <div class="card">
             <h2>Time Range</h2>
-
-            <!-- Start -->
             <div class="field-group">
                 <label for="start-datetime">Start</label>
                 <div class="field-row">
                     <div class="field-group">
-                        <input type="datetime-local" id="start-datetime" step="1"
+                        <input type="text" id="start-datetime" placeholder="YYYY-MM-DD HH:MM:SS"
                                aria-describedby="start-error">
                     </div>
                     <div class="field-group">
@@ -218,13 +104,11 @@
                 </div>
                 <div id="start-error" class="field-error" role="alert"></div>
             </div>
-
-            <!-- End -->
             <div class="field-group">
                 <label for="end-datetime">End</label>
                 <div class="field-row">
                     <div class="field-group">
-                        <input type="datetime-local" id="end-datetime" step="1"
+                        <input type="text" id="end-datetime" placeholder="YYYY-MM-DD HH:MM:SS"
                                aria-describedby="end-error">
                     </div>
                     <div class="field-group">
@@ -233,26 +117,6 @@
                 </div>
                 <div id="end-error" class="field-error" role="alert"></div>
             </div>
-        </div>
-
-        <!-- Window Duration (auto-calculated, read-only) -->
-        <div class="card">
-            <h2>Window Duration <span style="font-weight:normal;font-size:0.8rem;color:#888;">(auto-calculated from time range)</span></h2>
-            <div class="field-row">
-                <div class="field-group">
-                    <label for="window-days">Days</label>
-                    <input type="number" id="window-days" readonly tabindex="-1"
-                           style="background:#f0f0f0;cursor:default;"
-                           aria-describedby="window-error">
-                </div>
-                <div class="field-group">
-                    <label for="window-hours">Hours</label>
-                    <input type="number" id="window-hours" readonly tabindex="-1"
-                           style="background:#f0f0f0;cursor:default;"
-                           aria-describedby="window-error">
-                </div>
-            </div>
-            <div id="window-error" class="field-error" role="alert"></div>
         </div>
 
         <!-- Probability -->
@@ -266,311 +130,242 @@
             </div>
         </div>
 
-        <!-- Calculate -->
-        <button type="button" class="btn-primary" id="btn-calculate">Calculate</button>
-
-        <!-- Results -->
-        <div id="results-section" class="card" style="margin-top:1rem;" aria-live="polite">
+        <!-- Results (auto-calculated) -->
+        <div id="results-section" class="card" aria-live="polite">
             <h2>Results</h2>
             <table class="results-table" aria-label="Calculation results">
                 <thead>
-                    <tr>
-                        <th scope="col">Step</th>
-                        <th scope="col">Value</th>
-                    </tr>
+                    <tr><th scope="col">Step</th><th scope="col">Value</th></tr>
                 </thead>
                 <tbody id="results-body"></tbody>
             </table>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
     (function () {
         "use strict";
 
-        /* ── Extract auth token from URL path ─────────────────── */
-        // URL pattern: /{token}
+        /* ── Auth token from URL ──────────────────────────────── */
         var pathParts = window.location.pathname.split("/").filter(Boolean);
         var AUTH_TOKEN = pathParts.length > 0 ? pathParts[0] : "";
 
-        /* ── Timezone data ────────────────────────────────────── */
-        // Detect browser timezone offset string
+        /* ── Timezone helpers ─────────────────────────────────── */
         function getLocalOffsetString() {
             var now = new Date();
-            var offsetMin = now.getTimezoneOffset();
-            var sign = offsetMin <= 0 ? "+" : "-";
-            var absMin = Math.abs(offsetMin);
-            var h = String(Math.floor(absMin / 60)).padStart(2, "0");
-            var m = String(absMin % 60).padStart(2, "0");
-            return sign + h + ":" + m;
+            var m = now.getTimezoneOffset();
+            var sign = m <= 0 ? "+" : "-";
+            var abs = Math.abs(m);
+            return sign + String(Math.floor(abs/60)).padStart(2,"0") + ":" + String(abs%60).padStart(2,"0");
         }
-
         var localOffset = getLocalOffsetString();
-        var localLabel = "Browser Local (" + localOffset + ")";
 
         var TIMEZONES = [
-            { label: localLabel,                offset: localOffset },
+            { label: "Browser Local (" + localOffset + ")", offset: localOffset },
             { label: "US Eastern (\u221205:00)", offset: "-05:00" },
-            { label: "UTC (+00:00)",            offset: "+00:00" }
+            { label: "UTC (+00:00)", offset: "+00:00" }
         ];
 
-        /* ── DOM refs ─────────────────────────────────────────── */
-        var $banner       = document.getElementById("banner");
-        var $startDT      = document.getElementById("start-datetime");
-        var $startTZ      = document.getElementById("start-tz");
-        var $endDT        = document.getElementById("end-datetime");
-        var $endTZ        = document.getElementById("end-tz");
-        var $windowDays   = document.getElementById("window-days");
-        var $windowHours  = document.getElementById("window-hours");
-        var $probability  = document.getElementById("probability");
-        var $btnNow       = document.getElementById("btn-now");
-        var $btnCalc      = document.getElementById("btn-calculate");
-        var $resultsSection = document.getElementById("results-section");
-        var $resultsBody  = document.getElementById("results-body");
+        function parseOffsetMs(s) {
+            var sign = s.charAt(0) === "-" ? -1 : 1;
+            var p = s.substring(1).split(":");
+            return sign * ((parseInt(p[0],10)||0)*60 + (parseInt(p[1],10)||0)) * 60000;
+        }
 
-        /* Error display elements */
+        /* ── DOM refs ─────────────────────────────────────────── */
+        var $banner   = document.getElementById("banner");
+        var $startDT  = document.getElementById("start-datetime");
+        var $startTZ  = document.getElementById("start-tz");
+        var $endDT    = document.getElementById("end-datetime");
+        var $endTZ    = document.getElementById("end-tz");
+        var $prob     = document.getElementById("probability");
+        var $results  = document.getElementById("results-section");
+        var $tbody    = document.getElementById("results-body");
+
         var errorEls = {
-            "time_range":  document.getElementById("start-error"),
+            "time_range": document.getElementById("start-error"),
             "time_range.start": document.getElementById("start-error"),
-            "time_range.end":   document.getElementById("end-error"),
-            "window":      document.getElementById("window-error"),
-            "window.days": document.getElementById("window-error"),
-            "window.hours":document.getElementById("window-error"),
+            "time_range.end": document.getElementById("end-error"),
+            "window": document.getElementById("start-error"),
+            "window.days": document.getElementById("start-error"),
+            "window.hours": document.getElementById("start-error"),
             "probability": document.getElementById("probability-error")
         };
 
-        /* ── Populate timezone dropdowns ──────────────────────── */
-        function populateTZ(selectEl) {
-            TIMEZONES.forEach(function (tz) {
-                var opt = document.createElement("option");
-                opt.value = tz.offset;
-                opt.textContent = tz.label;
-                selectEl.appendChild(opt);
+        /* ── Populate TZ dropdowns ────────────────────────────── */
+        function populateTZ(el) {
+            TIMEZONES.forEach(function(tz) {
+                var o = document.createElement("option");
+                o.value = tz.offset; o.textContent = tz.label;
+                el.appendChild(o);
             });
         }
         populateTZ($startTZ);
         populateTZ($endTZ);
 
-        /* ── Format a Date to datetime-local value ────────────── */
-        function formatDatetimeLocal(dt) {
-            var y  = dt.getFullYear();
-            var mo = String(dt.getMonth() + 1).padStart(2, "0");
-            var d  = String(dt.getDate()).padStart(2, "0");
-            var h  = String(dt.getHours()).padStart(2, "0");
-            var mi = String(dt.getMinutes()).padStart(2, "0");
-            var s  = String(dt.getSeconds()).padStart(2, "0");
-            return y + "-" + mo + "-" + d + "T" + h + ":" + mi + ":" + s;
-        }
+        /* ── Flatpickr setup (ISO format, 24hr) ──────────────── */
+        var fpOpts = {
+            enableTime: true, enableSeconds: true, time_24hr: true,
+            dateFormat: "Y-m-d H:i:S",
+            onChange: function() { scheduleCalculation(); }
+        };
 
-        /* ── "Now" helper ─────────────────────────────────────── */
-        function setNow() {
-            var now = new Date();
-            $startDT.value = formatDatetimeLocal(now);
-            $startTZ.value = localOffset;
-            updateWindowDuration();
-        }
-
-        $btnNow.addEventListener("click", setNow);
-
-        /* ── Auto-calculate window duration from time range ───── */
-        function updateWindowDuration() {
-            var startVal = $startDT.value;
-            var endVal   = $endDT.value;
-            if (!startVal || !endVal) {
-                $windowDays.value = "";
-                $windowHours.value = "";
-                return;
-            }
-            // Parse as local dates, then apply timezone offsets to get UTC ms
-            var startMs = new Date(startVal).getTime() - parseOffsetMs($startTZ.value);
-            var endMs   = new Date(endVal).getTime()   - parseOffsetMs($endTZ.value);
-            var diffMs  = endMs - startMs;
-            if (diffMs <= 0) {
-                $windowDays.value = "0";
-                $windowHours.value = "0";
-                return;
-            }
-            var totalHours = diffMs / (1000 * 60 * 60);
-            var days  = Math.floor(totalHours / 24);
-            var hours = Math.round(totalHours % 24);
-            $windowDays.value  = days;
-            $windowHours.value = hours;
-        }
-
-        function parseOffsetMs(offsetStr) {
-            // "+08:00" -> ms, "-05:00" -> ms
-            var sign = offsetStr.charAt(0) === "-" ? -1 : 1;
-            var parts = offsetStr.substring(1).split(":");
-            var h = parseInt(parts[0], 10) || 0;
-            var m = parseInt(parts[1], 10) || 0;
-            return sign * (h * 60 + m) * 60 * 1000;
-        }
-
-        // Recalculate window when any time input changes
-        $startDT.addEventListener("change", updateWindowDuration);
-        $endDT.addEventListener("change", updateWindowDuration);
-        $startTZ.addEventListener("change", updateWindowDuration);
-        $endTZ.addEventListener("change", updateWindowDuration);
-
-        /* ── Defaults ─────────────────────────────────────────── */
         var now = new Date();
-        $startDT.value = formatDatetimeLocal(now);
+        var fpStart = flatpickr($startDT, Object.assign({}, fpOpts, { defaultDate: now }));
+
+        // End = tomorrow at 23:59:59
+        var endDefault = new Date(now);
+        endDefault.setDate(endDefault.getDate() + 1);
+        endDefault.setHours(23, 59, 59, 0);
+        var fpEnd = flatpickr($endDT, Object.assign({}, fpOpts, { defaultDate: endDefault }));
+
         $startTZ.value = localOffset;
-
-        var endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        $endDT.value = formatDatetimeLocal(endDate);
         $endTZ.value = "-05:00";
-
-        updateWindowDuration();
 
         /* ── UI helpers ───────────────────────────────────────── */
         function clearErrors() {
-            Object.keys(errorEls).forEach(function (k) {
-                if (errorEls[k]) errorEls[k].textContent = "";
-            });
+            Object.keys(errorEls).forEach(function(k) { if (errorEls[k]) errorEls[k].textContent = ""; });
         }
-
         function showBanner(msg, type) {
             $banner.textContent = msg;
             $banner.className = "banner " + type;
             $banner.style.display = "block";
         }
-
-        function hideBanner() {
-            $banner.style.display = "none";
-            $banner.textContent = "";
-        }
-
-        function hideResults() {
-            $resultsSection.style.display = "none";
-        }
+        function hideBanner() { $banner.style.display = "none"; }
+        function hideResults() { $results.style.display = "none"; }
 
         function showFieldError(field, message) {
             var el = errorEls[field];
             if (!el) {
                 var keys = Object.keys(errorEls);
                 for (var i = 0; i < keys.length; i++) {
-                    if (field.indexOf(keys[i]) === 0 || keys[i].indexOf(field) === 0) {
-                        el = errorEls[keys[i]];
-                        break;
-                    }
+                    if (field.indexOf(keys[i]) === 0 || keys[i].indexOf(field) === 0) { el = errorEls[keys[i]]; break; }
                 }
             }
-            if (el) {
-                el.textContent = message;
-            }
+            if (el) el.textContent = message;
         }
 
-        /* ── Build ISO 8601 timestamp ─────────────────────────── */
-        function buildISO(datetimeLocalValue, offsetValue) {
-            // datetime-local gives "YYYY-MM-DDThh:mm:ss"
-            if (!datetimeLocalValue) return "";
-            return datetimeLocalValue + offsetValue;
+        /* ── Compute window duration (client-side) ────────────── */
+        function getWindowDuration() {
+            var sv = $startDT.value, ev = $endDT.value;
+            if (!sv || !ev) return null;
+            // Flatpickr gives "YYYY-MM-DD HH:MM:SS" — replace space with T for Date parsing
+            var startMs = new Date(sv.replace(" ","T")).getTime() - parseOffsetMs($startTZ.value);
+            var endMs   = new Date(ev.replace(" ","T")).getTime() - parseOffsetMs($endTZ.value);
+            var diffMs  = endMs - startMs;
+            if (diffMs <= 0) return null;
+            var totalH = diffMs / 3600000;
+            return { days: Math.floor(totalH / 24), hours: Math.round(totalH % 24) };
+        }
+
+        /* ── Build ISO 8601 ───────────────────────────────────── */
+        function buildISO(fpValue, offset) {
+            if (!fpValue) return "";
+            return fpValue.replace(" ", "T") + offset;
         }
 
         /* ── Display results ──────────────────────────────────── */
-        function displayResults(data) {
+        function displayResults(data, win) {
+            $tbody.innerHTML = "";
             var steps = data.steps;
-            $resultsBody.innerHTML = "";
 
             var rows = [
-                ["Lambda (\u03bb)",       steps.lambda_value],
-                ["Window (hours)",        steps.window_hours],
-                ["Scaling Factor",        steps.scaling_factor],
-                ["Annualized Frequency",  steps.annualized_frequency]
+                { section: "Duration" },
+                ["Days", win.days],
+                ["Hours", win.hours],
+                ["Total Hours", steps.window_hours],
+                { section: "Poisson Calculation" },
+                ["Lambda (\u03bb)", steps.lambda_value],
+                ["Scaling Factor (8766 / window_hours)", steps.scaling_factor],
+                ["Annualized Frequency", steps.annualized_frequency]
             ];
 
-            rows.forEach(function (row, idx) {
+            rows.forEach(function(row) {
                 var tr = document.createElement("tr");
-                if (idx === rows.length - 1) tr.className = "highlight";
-
-                var th = document.createElement("td");
-                th.textContent = row[0];
-                tr.appendChild(th);
-
-                var td = document.createElement("td");
-                td.textContent = typeof row[1] === "number"
-                    ? (Number.isInteger(row[1]) ? row[1] : row[1].toFixed(6))
-                    : row[1];
-                tr.appendChild(td);
-
-                $resultsBody.appendChild(tr);
+                if (row.section) {
+                    tr.className = "section-header";
+                    var td = document.createElement("td");
+                    td.colSpan = 2; td.textContent = row.section;
+                    tr.appendChild(td);
+                } else {
+                    var isHighlight = row[0] === "Annualized Frequency";
+                    if (isHighlight) tr.className = "highlight";
+                    var td1 = document.createElement("td"); td1.textContent = row[0];
+                    var td2 = document.createElement("td");
+                    td2.textContent = typeof row[1] === "number"
+                        ? (Number.isInteger(row[1]) ? row[1] : row[1].toFixed(6))
+                        : row[1];
+                    tr.appendChild(td1); tr.appendChild(td2);
+                }
+                $tbody.appendChild(tr);
             });
 
-            $resultsSection.style.display = "block";
+            $results.style.display = "block";
         }
 
-        /* ── Calculate ────────────────────────────────────────── */
-        $btnCalc.addEventListener("click", function () {
-            clearErrors();
-            hideBanner();
-            hideResults();
+        /* ── Auto-calculate with debounce ─────────────────────── */
+        var calcTimer = null;
+        function scheduleCalculation() {
+            clearTimeout(calcTimer);
+            calcTimer = setTimeout(doCalculation, 400);
+        }
+
+        function doCalculation() {
+            clearErrors(); hideBanner(); hideResults();
 
             if (!AUTH_TOKEN) {
-                showBanner("No auth token found in URL. Access via /{your-token}", "error");
+                showBanner("No auth token in URL. Access via /{your-token}", "error");
                 return;
             }
 
-            var startISO = buildISO($startDT.value, $startTZ.value);
-            var endISO   = buildISO($endDT.value, $endTZ.value);
+            var win = getWindowDuration();
+            if (!win) return; // not enough input yet
+
+            var probVal = parseFloat($prob.value);
+            if (isNaN(probVal)) return; // no probability yet
 
             var payload = {
-                time_range: {
-                    start: startISO,
-                    end:   endISO
-                },
-                window: {
-                    days:  parseInt($windowDays.value, 10) || 0,
-                    hours: parseInt($windowHours.value, 10) || 0
-                },
-                probability: parseFloat($probability.value),
+                time_range: { start: buildISO($startDT.value, $startTZ.value), end: buildISO($endDT.value, $endTZ.value) },
+                window: { days: win.days, hours: win.hours },
+                probability: probVal,
                 mode: "poisson"
             };
 
             fetch("/api/calculate", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": AUTH_TOKEN
-                },
+                headers: { "Content-Type": "application/json", "Authorization": AUTH_TOKEN },
                 body: JSON.stringify(payload)
             })
-            .then(function (resp) {
-                if (resp.ok) {
-                    return resp.json().then(function (data) {
-                        displayResults(data);
-                        showBanner("Calculation complete.", "success");
-                    });
-                }
-
+            .then(function(resp) {
+                if (resp.ok) return resp.json().then(function(data) { displayResults(data, win); });
                 if (resp.status === 422) {
-                    return resp.json().then(function (data) {
+                    return resp.json().then(function(data) {
                         hideResults();
-                        if (data.errors && Array.isArray(data.errors)) {
-                            data.errors.forEach(function (err) {
-                                showFieldError(err.field, err.message);
-                            });
-                            showBanner("Please fix the validation errors below.", "error");
-                        } else {
-                            showBanner("Validation error.", "error");
-                        }
+                        if (data.errors) data.errors.forEach(function(e) { showFieldError(e.field, e.message); });
+                        showBanner("Please fix the errors below.", "error");
                     });
                 }
-
-                if (resp.status === 401) {
-                    hideResults();
-                    showBanner("Authentication failed. Your token may be invalid.", "error");
-                    return;
-                }
-
-                hideResults();
-                showBanner("Unexpected error (HTTP " + resp.status + ").", "error");
+                if (resp.status === 401) { showBanner("Authentication failed.", "error"); return; }
+                showBanner("Error (HTTP " + resp.status + ").", "error");
             })
-            .catch(function () {
-                hideResults();
-                showBanner("Network error \u2014 could not reach the server.", "error");
-            });
+            .catch(function() { showBanner("Network error.", "error"); });
+        }
+
+        /* ── Wire up auto-calculation on any input change ─────── */
+        $startTZ.addEventListener("change", scheduleCalculation);
+        $endTZ.addEventListener("change", scheduleCalculation);
+        $prob.addEventListener("input", scheduleCalculation);
+
+        /* ── "Now" button ─────────────────────────────────────── */
+        document.getElementById("btn-now").addEventListener("click", function() {
+            fpStart.setDate(new Date(), true);
+            $startTZ.value = localOffset;
+            scheduleCalculation();
         });
+
+        /* ── Initial calculation ──────────────────────────────── */
+        scheduleCalculation();
 
     })();
     </script>
